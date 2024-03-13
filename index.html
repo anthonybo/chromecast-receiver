@@ -2,9 +2,7 @@
 <html>
 <head>
   <title>Custom Chromecast Receiver</title>
-  <!-- Load the mux.js library for transmuxing TS to MP4 -->
   <script src="https://cdn.jsdelivr.net/npm/mux.js@5.5.3/dist/mux.min.js"></script>
-  <!-- Load the Shaka Player library -->
   <script src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.compiled.js"></script>
   <script type="text/javascript" src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
   <style>
@@ -37,7 +35,6 @@
   }
 
   function logError(error) {
-    // Enhanced error logging
     let errorMessage = "Error: ";
     if (error && error.message) {
       errorMessage += error.message;
@@ -59,11 +56,9 @@
   playerManager.setMessageInterceptor(
     cast.framework.messages.MessageType.LOAD,
     async (request) => {
-      // Ensure URL encoding is handled properly
       const url = new URL(request.media.contentId);
-      url.search = url.search.replace(/\?/g, '%3F').replace(/=/g, '%3D').replace(/&/g, '%26'); // Re-encode query parameters
+      const encodedUrl = `${url.origin}${url.pathname}?${url.searchParams}`;
 
-      const encodedUrl = url.toString();
       log('LOAD interceptor called with media: ' + encodedUrl);
 
       const player = new shaka.Player(document.getElementById('audio'));
@@ -86,7 +81,7 @@
       logError(event.detail);
     });
 
-  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. V14');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. V15');
 </script>
 
 </body>
