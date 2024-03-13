@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Custom Chromecast Receiver</title>
+  <script type="text/javascript" src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.compiled.js"></script>
+</head>
+<body>
+
+<video id="video" autoplay></video>
+
+<script>
+  const context = cast.framework.CastReceiverContext.getInstance();
+  const playerManager = context.getPlayerManager();
+
+  // Intercept the LOAD request to load and play the media
+  playerManager.setMessageInterceptor(
+    cast.framework.messages.MessageType.LOAD,
+    request => {
+      // Initialize Shaka Player
+      const player = new shaka.Player(document.getElementById('video'));
+
+      // Listen for error events
+      player.addEventListener('error', onErrorEvent);
+
+      // Try to load the video's manifest
+      player.load(request.media.contentId).then(() => {
+        console.log('The video has now been loaded!');
+      }).catch(onError); // onError is executed if the asynchronous load fails
+
+      return request;
+    });
+
+  function onErrorEvent(event) {
+    // Extract the shaka.util.Error object from the event.
+    onError(event.detail);
+  }
+
+  function onError(error) {
+    // Log the error
+    console.error('Error code', error.code, 'object', error);
+  }
+
+  // Start the Cast Receiver
+  context.start();
+</script>
+
+</body>
+</html>
+
