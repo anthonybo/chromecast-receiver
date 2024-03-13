@@ -56,7 +56,12 @@
   playerManager.setMessageInterceptor(
     cast.framework.messages.MessageType.LOAD,
     async (request) => {
-      log('LOAD interceptor called with media: ' + request.media.contentId);
+      // Encoding URL query parameters
+      const url = new URL(request.media.contentId);
+      const encodedSearchParams = new URLSearchParams(url.search);
+      const encodedUrl = `${url.origin}${url.pathname}?${encodedSearchParams}`;
+
+      log('LOAD interceptor called with media: ' + encodedUrl);
 
       const player = new shaka.Player(document.getElementById('audio'));
 
@@ -64,7 +69,7 @@
       player.addEventListener('error', event => log('Shaka Error: ' + JSON.stringify(event.detail)));
 
       try {
-        await player.load(request.media.contentId);
+        await player.load(encodedUrl);
         log('The audio has now been loaded!');
       } catch (error) {
         logError(error); // Use enhanced error logging
@@ -74,7 +79,7 @@
       return request; // Proceed with the load as originally requested
     });
 
-  log('Custom Chromecast Receiver started. Shaka enabled for HLS. V11');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS. V12');
 </script>
 
 </body>
