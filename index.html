@@ -3,6 +3,7 @@
 <head>
   <title>Custom Chromecast Receiver</title>
   <script type="text/javascript" src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.compiled.js"></script>
   <style>
     #logs {
       position: absolute;
@@ -22,36 +23,46 @@
 </head>
 <body>
 
+<audio id="audio" autoplay controls></audio>
 <div id="logs"></div>
 
 <script>
   function log(message) {
-    console.log(message); // Also log to console
+    console.log(message); // Log to console as well
     const logsElement = document.getElementById('logs');
-    logsElement.textContent += message + '\n'; // Display message on screen
+    logsElement.textContent += message + '\n'; // Add message to screen
   }
 
   const context = cast.framework.CastReceiverContext.getInstance();
   const playerManager = context.getPlayerManager();
 
-  // Listen for error events from the Player Manager
-  playerManager.addEventListener(
-    cast.framework.events.EventType.ERROR,
-    (event) => {
-      log('Error: ' + JSON.stringify(event));
+  // Intercept the LOAD request to load and play the media
+  playerManager.setMessageInterceptor(
+    cast.framework.messages.MessageType.LOAD,
+    (request) => {
+      log('LOAD interceptor called with media: ' + request.media.contentId);
+
+      // Initialize Shaka Player for audio element
+      const player = new shaka.Player(document.getElementById('audio'));
+      player.addEventListener('error', onErrorEvent);
+
+      player.load(request.media.contentId).then(() => {
+        log('The audio has now been loaded!');
+      }).catch(onError); // onError is executed if the asynchronous load fails
+
+      return request;
     });
 
-  context.start();
-  log('Custom Chromecast Receiver started. without shaka');
+  function onErrorEvent(event) {
+    onError(event.detail);
+  }
 
-  // Example: Listening to the LOAD event, just to log
-  playerManager.addEventListener(
-    cast.framework.events.EventType.MEDIA_STATUS,
-    (event) => {
-      if (event.mediaStatus && event.mediaStatus.contentId) {
-        log('Loading media: ' + event.mediaStatus.contentId);
-      }
-  });
+  function onError(error) {
+    log('Error code: ' + error.code + ', Object: ' + JSON.stringify(error));
+  }
+
+  context.start();
+  log('Custom Chromecast Receiver started.');
 </script>
 
 </body>
