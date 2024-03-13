@@ -36,7 +36,11 @@
   const context = cast.framework.CastReceiverContext.getInstance();
   const playerManager = context.getPlayerManager();
 
-  // Intercept the LOAD request to load and play the media
+  // Enable Shaka Player for HLS
+  let castReceiverOptions = new cast.framework.CastReceiverOptions();
+  castReceiverOptions.useShakaForHls = true;
+  context.start(castReceiverOptions);
+
   playerManager.setMessageInterceptor(
     cast.framework.messages.MessageType.LOAD,
     (request) => {
@@ -61,8 +65,7 @@
     log('Error code: ' + error.code + ', Object: ' + JSON.stringify(error));
   }
 
-  context.start();
-  log('Custom Chromecast Receiver started. Shaka');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS..');
 </script>
 
 </body>
