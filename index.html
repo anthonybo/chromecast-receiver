@@ -3,39 +3,66 @@
 <head>
   <title>Custom Chromecast Receiver</title>
   <script type="text/javascript" src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.compiled.js"></script>
+  <style>
+    #logs {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black */
+      color: white;
+      font-size: 16px;
+      padding: 10px;
+      white-space: pre-wrap;
+      z-index: 1000; /* Ensure it's on top */
+      max-height: 50%; /* Limit the height */
+      overflow-y: auto; /* Add scroll if content is too long */
+    }
+  </style>
 </head>
 <body>
 
+<audio id="audio" autoplay controls></audio>
 <div id="logs"></div>
 
 <script>
   function log(message) {
-    console.log(message); // Also log to console
+    console.log(message); // Log to console as well
     const logsElement = document.getElementById('logs');
-    logsElement.textContent += message + '\n'; // Display message on screen
+    logsElement.textContent += message + '\n'; // Add message to screen
   }
 
   const context = cast.framework.CastReceiverContext.getInstance();
-
-  // Specify that Shaka Player should be used for HLS playback
-  const playerOptions = {};
-  playerOptions.useShakaForHls = true;
-
-  context.start({playerOptions: playerOptions});
-  log('Custom Chromecast Receiver started with Shaka Player for HLS.');
-
   const playerManager = context.getPlayerManager();
 
-  // Listen for error events from the Player Manager
-  playerManager.addEventListener(
-    cast.framework.events.EventType.ERROR,
-    (event) => {
-      log('Error: ' + JSON.stringify(event));
-    }
-  );
+  // Intercept the LOAD request to load and play the media
+  playerManager.setMessageInterceptor(
+    cast.framework.messages.MessageType.LOAD,
+    (request) => {
+      log('LOAD interceptor called with media: ' + request.media.contentId);
 
-  // Example: Add additional listeners and logic as needed for your application
+      // Initialize Shaka Player for audio element
+      const player = new shaka.Player(document.getElementById('audio'));
+      player.addEventListener('error', onErrorEvent);
 
+      player.load(request.media.contentId).then(() => {
+        log('The audio has now been loaded!');
+      }).catch(onError); // onError is executed if the asynchronous load fails
+
+      return request;
+    });
+
+  function onErrorEvent(event) {
+    onError(event.detail);
+  }
+
+  function onError(error) {
+    log('Error code: ' + error.code + ', Object: ' + JSON.stringify(error));
+  }
+
+  context.start();
+  log('Custom Chromecast Receiver started. Shaka');
 </script>
 
 </body>
