@@ -3,7 +3,6 @@
 <head>
   <title>Custom Chromecast Receiver</title>
   <script type="text/javascript" src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.compiled.js"></script>
   <style>
     #logs {
       position: absolute;
@@ -23,7 +22,7 @@
 </head>
 <body>
 
-<audio id="audio" autoplay controls></audio>
+<audio id="audio" controls></audio>
 <div id="logs"></div>
 
 <script>
@@ -34,35 +33,47 @@
   }
 
   const context = cast.framework.CastReceiverContext.getInstance();
+
+  // Example MIME type and codec for checking; adjust as necessary for your media
+  const mimeType = 'audio/mp4';
+  const codecs = 'mp4a.40.5';
+  const isSupported = context.canDisplayType(mimeType, codecs);
+  log(`Checking support for MIME type '${mimeType}' with codecs '${codecs}': ${isSupported}`);
+
   const playerManager = context.getPlayerManager();
 
-  // Intercept the LOAD request to load and play the media
   playerManager.setMessageInterceptor(
     cast.framework.messages.MessageType.LOAD,
     (request) => {
-      log('LOAD interceptor called with media: ' + request.media.contentId);
+      log(`Received LOAD request for media: ${request.media.contentId}`);
+      
+      if (!isSupported) {
+        log('Media type is not supported. Rejecting LOAD request.');
+        return Promise.reject(new cast.framework.messages.ErrorData(cast.framework.messages.ErrorType.LOAD_FAILED));
+      }
 
-      // Initialize Shaka Player for audio element
-      const player = new shaka.Player(document.getElementById('audio'));
-      player.addEventListener('error', onErrorEvent);
+      log('Proceeding to load and play the supported media.');
+      const audioElement = document.getElementById('audio');
+      audioElement.src = request.media.contentId;
+      audioElement.load();
+      audioElement.play().then(() => {
+        log('Audio playback started successfully.');
+      }).catch((error) => {
+        log(`Error during audio playback: ${error.message}`);
+      });
 
-      player.load(request.media.contentId).then(() => {
-        log('The audio has now been loaded!');
-      }).catch(onError); // onError is executed if the asynchronous load fails
-
+      // Return unchanged request for processing
       return request;
     });
 
-  function onErrorEvent(event) {
-    onError(event.detail);
-  }
-
-  function onError(error) {
-    log('Error code: ' + error.code + ', Object: ' + JSON.stringify(error));
-  }
+  playerManager.addEventListener(
+    cast.framework.events.EventType.ERROR,
+    (event) => {
+      log(`Error event received: ${JSON.stringify(event)}`);
+    });
 
   context.start();
-  log('Custom Chromecast Receiver started. Shaka');
+  log('Custom Chromecast Receiver started.');
 </script>
 
 </body>
