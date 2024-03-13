@@ -57,12 +57,25 @@
     cast.framework.messages.MessageType.LOAD,
     async (request) => {
       const url = new URL(request.media.contentId);
-      const encodedUrl = `${url.origin}${url.pathname}?${url.searchParams}`;
+      const encodedUrl = encodeURI(url.toString());
 
       log('LOAD interceptor called with media: ' + encodedUrl);
 
       const player = new shaka.Player(document.getElementById('audio'));
       player.addEventListener('error', event => logError(event.detail));
+
+      // Advanced diagnostic checks
+      player.addEventListener('streaming', () => log('Shaka Player has begun streaming.'));
+      player.addEventListener('adaptation', () => log('Shaka Player adaptation event. Track changed.'));
+
+      // Configure the player's networking or streaming parameters, if needed
+      player.configure({
+        streaming: {
+          // Example: adjust buffering and rebuffering parameters
+          bufferingGoal: 30,
+          rebufferingGoal: 5,
+        },
+      });
 
       try {
         await player.load(encodedUrl);
@@ -81,7 +94,7 @@
       logError(event.detail);
     });
 
-  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. V15');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. V16');
 </script>
 
 </body>
