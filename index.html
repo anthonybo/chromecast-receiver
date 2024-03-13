@@ -7,25 +7,34 @@
 </head>
 <body>
 
-<video id="video" autoplay></video>
+<!-- Updated to use an audio tag for audiobooks -->
+<audio id="audio" autoplay controls></audio>
 
 <script>
+  console.log('Custom Receiver Starting');
+  
   const context = cast.framework.CastReceiverContext.getInstance();
   const playerManager = context.getPlayerManager();
+
+  console.log('Player Manager initialized');
 
   // Intercept the LOAD request to load and play the media
   playerManager.setMessageInterceptor(
     cast.framework.messages.MessageType.LOAD,
     request => {
-      // Initialize Shaka Player
-      const player = new shaka.Player(document.getElementById('video'));
+      console.log('Intercepting LOAD request:', request);
+
+      // Initialize Shaka Player with the audio element
+      const player = new shaka.Player(document.getElementById('audio'));
+
+      console.log('Shaka Player initialized');
 
       // Listen for error events
       player.addEventListener('error', onErrorEvent);
 
-      // Try to load the video's manifest
+      // Try to load the audiobook's manifest
       player.load(request.media.contentId).then(() => {
-        console.log('The video has now been loaded!');
+        console.log('The audiobook has now been loaded!');
       }).catch(onError); // onError is executed if the asynchronous load fails
 
       return request;
@@ -43,8 +52,8 @@
 
   // Start the Cast Receiver
   context.start();
+  console.log('Cast Receiver Context started');
 </script>
 
 </body>
 </html>
-
