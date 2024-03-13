@@ -27,26 +27,23 @@
 
 <script>
   function log(message) {
-    console.log(message); // Log to console as well
+    console.log(message); // Also log to console
     const logsElement = document.getElementById('logs');
-    logsElement.textContent += message + '\n'; // Add message to screen
+    logsElement.textContent += message + '\n'; // Display message on screen
   }
 
   const context = cast.framework.CastReceiverContext.getInstance();
-
-  // Example MIME type and codec for checking; adjust as necessary for your media
-  const mimeType = 'audio/mp4';
-  const codecs = 'mp4a.40.5';
-  const isSupported = context.canDisplayType(mimeType, codecs);
-  log(`Checking support for MIME type '${mimeType}' with codecs '${codecs}': ${isSupported}`);
-
   const playerManager = context.getPlayerManager();
 
   playerManager.setMessageInterceptor(
     cast.framework.messages.MessageType.LOAD,
     (request) => {
+      const mimeType = request.media.contentType; // Dynamically get MIME type from request
+      // Assuming the codecs are part of the mimeType; if separate, they need to be extracted differently
+      const isSupported = context.canDisplayType(mimeType);
       log(`Received LOAD request for media: ${request.media.contentId}`);
-      
+      log(`Checking support for MIME type '${mimeType}': ${isSupported}`);
+
       if (!isSupported) {
         log('Media type is not supported. Rejecting LOAD request.');
         return Promise.reject(new cast.framework.messages.ErrorData(cast.framework.messages.ErrorType.LOAD_FAILED));
@@ -62,8 +59,7 @@
         log(`Error during audio playback: ${error.message}`);
       });
 
-      // Return unchanged request for processing
-      return request;
+      return request; // Proceed with loading the requested media
     });
 
   playerManager.addEventListener(
@@ -73,7 +69,7 @@
     });
 
   context.start();
-  log('Custom Chromecast Receiver started.');
+  log('Custom Chromecast Receiver started. Custom media check added.');
 </script>
 
 </body>
