@@ -4,11 +4,27 @@
   <title>Custom Chromecast Receiver</title>
   <script type="text/javascript" src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.compiled.js"></script>
+  <style>
+    #logs {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black */
+      color: white;
+      font-size: 16px;
+      padding: 10px;
+      white-space: pre-wrap;
+      z-index: 1000; /* Ensure it's on top */
+      max-height: 50%; /* Limit the height */
+      overflow-y: auto; /* Add scroll if content is too long */
+    }
+  </style>
 </head>
 <body>
 
 <audio id="audio" autoplay controls></audio>
-<div id="logs" style="white-space: pre-wrap;"></div>
+<div id="logs"></div>
 
 <script>
   function log(message) {
