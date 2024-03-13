@@ -33,6 +33,19 @@
     logsElement.textContent += message + '\n'; // Add message to screen
   }
 
+  function logError(error) {
+    // Attempt to extract and log more detailed error information
+    let errorMessage = "Error: ";
+    if (error && error.message) {
+      errorMessage += error.message;
+    } else if (error && typeof error === 'object') {
+      errorMessage += JSON.stringify(error);
+    } else {
+      errorMessage += error; // Fallback if the error isn't an object or lacks a message
+    }
+    log(errorMessage);
+  }
+
   const context = cast.framework.CastReceiverContext.getInstance();
   const playerManager = context.getPlayerManager();
 
@@ -54,7 +67,7 @@
         await player.load(request.media.contentId);
         log('The audio has now been loaded!');
       } catch (error) {
-        log('Error during Shaka Player load: ' + error.message);
+        logError(error); // Use enhanced error logging
         return Promise.reject(); // Reject the load request to signal error
       }
 
