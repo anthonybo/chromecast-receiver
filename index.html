@@ -22,14 +22,13 @@
 </head>
 <body>
 
-<audio id="audio" controls></audio>
 <div id="logs"></div>
 
 <script>
   function log(message) {
     console.log(message); // Also log to console
     const logsElement = document.getElementById('logs');
-    logsElement.textContent += message + '\n'; // Display message on screen
+    logsElement.textContent += message + '\n'; // Add message to screen
   }
 
   const context = cast.framework.CastReceiverContext.getInstance();
@@ -37,39 +36,32 @@
 
   playerManager.setMessageInterceptor(
     cast.framework.messages.MessageType.LOAD,
-    (request) => {
-      const mimeType = request.media.contentType; // Dynamically get MIME type from request
-      // Assuming the codecs are part of the mimeType; if separate, they need to be extracted differently
-      const isSupported = context.canDisplayType(mimeType);
-      log(`Received LOAD request for media: ${request.media.contentId}`);
-      log(`Checking support for MIME type '${mimeType}': ${isSupported}`);
+    loadRequestData => {
+      log(`Received LOAD request for media: ${loadRequestData.media.contentId}`);
+      log(`MIME type: ${loadRequestData.media.contentType}`);
 
-      if (!isSupported) {
-        log('Media type is not supported. Rejecting LOAD request.');
-        return Promise.reject(new cast.framework.messages.ErrorData(cast.framework.messages.ErrorType.LOAD_FAILED));
+      // Dynamically check if the MIME type is 'application/x-mpegURL' for HLS streams
+      if (loadRequestData.media.contentType === 'application/x-mpegURL') {
+        log('MIME type is for HLS stream. Setting HlsSegmentFormat to AAC.');
+        loadRequestData.media.hlsSegmentFormat = cast.framework.messages.HlsSegmentFormat.AAC;
+      } else {
+        log('MIME type is not for HLS stream. Proceeding without setting HlsSegmentFormat.');
       }
 
-      log('Proceeding to load and play the supported media.');
-      const audioElement = document.getElementById('audio');
-      audioElement.src = request.media.contentId;
-      audioElement.load();
-      audioElement.play().then(() => {
-        log('Audio playback started successfully.');
-      }).catch((error) => {
-        log(`Error during audio playback: ${error.message}`);
-      });
+      // This log is to confirm the change or non-change based on MIME type
+      log(`HlsSegmentFormat set to: ${loadRequestData.media.hlsSegmentFormat}`);
 
-      return request; // Proceed with loading the requested media
+      return loadRequestData;
     });
 
+  // Example of adding more detailed logging for the error events
   playerManager.addEventListener(
     cast.framework.events.EventType.ERROR,
-    (event) => {
-      log(`Error event received: ${JSON.stringify(event)}`);
-    });
+    error => log(`Error event received: ${JSON.stringify(error)}`)
+  );
 
   context.start();
-  log('Custom Chromecast Receiver started. Custom media check added.');
+  log('Custom Chromecast Receiver started. hlsSegmentFormat test');
 </script>
 
 </body>
