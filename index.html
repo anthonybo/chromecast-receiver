@@ -34,6 +34,18 @@
   const context = cast.framework.CastReceiverContext.getInstance();
   const playerManager = context.getPlayerManager();
 
+  // Customizing media requests
+  playerManager.setMediaPlaybackInfoHandler((loadRequest, playbackConfig) => {
+      // Example: Setting the HTTP referer and origin headers for media requests
+      playbackConfig.headers = playbackConfig.headers || {};
+      playbackConfig.headers['Referer'] = 'https://www.dev.sdliveone.com/';
+      playbackConfig.headers['Origin'] = 'https://www.dev.sdliveone.com';
+      
+      // Note: Not all headers can or should be set this way. For example, User-Agent is controlled by the browser/device.
+      
+      return playbackConfig;
+  });
+
   playerManager.setMessageInterceptor(
     cast.framework.messages.MessageType.LOAD,
     loadRequestData => {
