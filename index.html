@@ -2,8 +2,11 @@
 <html>
 <head>
   <title>Custom Chromecast Receiver</title>
+  <!-- Load the mux.js library for transmuxing TS to MP4 -->
+  <script src="https://cdn.jsdelivr.net/npm/mux.js@5.5.3/dist/mux.min.js"></script>
+  <!-- Load the Shaka Player library -->
+  <script src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.compiled.js"></script>
   <script type="text/javascript" src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.compiled.js"></script>
   <style>
     #logs {
       position: absolute;
@@ -49,7 +52,6 @@
   const context = cast.framework.CastReceiverContext.getInstance();
   const playerManager = context.getPlayerManager();
 
-  // Setup Cast receiver options with Shaka for HLS
   let castReceiverOptions = new cast.framework.CastReceiverOptions();
   castReceiverOptions.useShakaForHls = true;
   context.start(castReceiverOptions);
@@ -57,36 +59,34 @@
   playerManager.setMessageInterceptor(
     cast.framework.messages.MessageType.LOAD,
     async (request) => {
+      // Ensure URL encoding is handled properly
       const url = new URL(request.media.contentId);
-      const encodedSearchParams = new URLSearchParams(url.search);
-      const encodedUrl = `${url.origin}${url.pathname}?${encodedSearchParams}`;
+      url.search = url.search.replace(/\?/g, '%3F').replace(/=/g, '%3D').replace(/&/g, '%26'); // Re-encode query parameters
 
+      const encodedUrl = url.toString();
       log('LOAD interceptor called with media: ' + encodedUrl);
 
       const player = new shaka.Player(document.getElementById('audio'));
-      // Listen for error events
       player.addEventListener('error', event => logError(event.detail));
 
-      // Attempt to load the media
       try {
         await player.load(encodedUrl);
         log('The audio has now been loaded!');
       } catch (error) {
-        logError(error); // Log the error with enhanced details
+        logError(error);
         return Promise.reject(new cast.framework.messages.ErrorData(cast.framework.messages.ErrorType.LOAD_FAILED));
       }
 
-      return request; // Proceed with the original request if successful
+      return request;
     });
 
-  // Adding an event listener for detailed error events from the player manager
   playerManager.addEventListener(
     cast.framework.events.EventType.ERROR,
     (event) => {
-      logError(event.detail); // Log the error with enhanced details
+      logError(event.detail);
     });
 
-  log('Custom Chromecast Receiver started. Shaka enabled for HLS. V13');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. V14');
 </script>
 
 </body>
