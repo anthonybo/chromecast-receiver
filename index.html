@@ -28,7 +28,7 @@
 
 <script>
   function log(message) {
-    console.log(message); // Log to console as well
+    console.log(message); // Also log to console
     const logsElement = document.getElementById('logs');
     logsElement.textContent += message + '\n'; // Add message to screen
   }
@@ -36,36 +36,32 @@
   const context = cast.framework.CastReceiverContext.getInstance();
   const playerManager = context.getPlayerManager();
 
-  // Enable Shaka Player for HLS
   let castReceiverOptions = new cast.framework.CastReceiverOptions();
   castReceiverOptions.useShakaForHls = true;
   context.start(castReceiverOptions);
 
   playerManager.setMessageInterceptor(
     cast.framework.messages.MessageType.LOAD,
-    (request) => {
+    async (request) => {
       log('LOAD interceptor called with media: ' + request.media.contentId);
 
-      // Initialize Shaka Player for audio element
       const player = new shaka.Player(document.getElementById('audio'));
-      player.addEventListener('error', onErrorEvent);
 
-      player.load(request.media.contentId).then(() => {
+      // Error handling
+      player.addEventListener('error', event => log('Shaka Error: ' + JSON.stringify(event.detail)));
+
+      try {
+        await player.load(request.media.contentId);
         log('The audio has now been loaded!');
-      }).catch(onError); // onError is executed if the asynchronous load fails
+      } catch (error) {
+        log('Error during Shaka Player load: ' + error.message);
+        return Promise.reject(); // Reject the load request to signal error
+      }
 
-      return request;
+      return request; // Proceed with the load as originally requested
     });
 
-  function onErrorEvent(event) {
-    onError(event.detail);
-  }
-
-  function onError(error) {
-    log('Error code: ' + error.code + ', Object: ' + JSON.stringify(error));
-  }
-
-  log('Custom Chromecast Receiver started. Shaka enabled for HLS..');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS.');
 </script>
 
 </body>
