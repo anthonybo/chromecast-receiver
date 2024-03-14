@@ -54,6 +54,13 @@
     log(errorMessage);
   }
 
+  // Log to confirm Mux.js is loaded
+  if (window.muxjs) {
+    log('Mux.js is loaded successfully.');
+  } else {
+    logError('Mux.js is not loaded or not found.');
+  }
+
   const context = cast.framework.CastReceiverContext.getInstance();
   const playerManager = context.getPlayerManager();
 
@@ -70,6 +77,14 @@
       log('LOAD interceptor called with media: ' + encodedUrl);
 
       const player = new shaka.Player(document.getElementById('audio'));
+
+       // Confirm Shaka Player is using Mux.js for transmuxing by checking Shaka Player's configuration
+       const config = player.getConfiguration();
+      if (config && config.streaming && config.streaming.alwaysTransmuxTS) {
+        log('Shaka Player is configured to always transmux TS using Mux.js.');
+      } else {
+        logError('Shaka Player might not be configured to use Mux.js for TS transmuxing.');
+      }
 
       // Advanced Shaka Player configurations
       // player.configure({
@@ -142,7 +157,7 @@
     cast.framework.events.EventType.ERROR,
     (event) => logError("Chromecast Player Error: " + JSON.stringify(event)));
 
-  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Advanced configurations applied.V25');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Advanced configurations applied.V26');
 </script>
 
 </body>
