@@ -41,13 +41,15 @@
     console.log(message); // Also log to console
   }
 
-  // Function to log errors
+  // Updated logging function to handle long error messages
   function logError(error) {
     let errorMessage = "Error: ";
-    if (error && error.message) {
-      errorMessage += error.message;
+    if (error && error.detail && error.detail.message) {
+      // Attempt to log a concise error message
+      errorMessage += error.detail.message;
     } else if (error && typeof error === 'object') {
-      errorMessage += JSON.stringify(error);
+      // Fallback to logging the entire error object if concise message isn't available
+      errorMessage += JSON.stringify(error, null, 2); // Pretty print the error object
     } else {
       errorMessage += error.toString();
     }
@@ -73,7 +75,13 @@
       const player = new shaka.Player(document.getElementById('audio'));
 
       // Force transmuxing TS segments
-      player.configure('streaming.forceTransmuxTS', true);
+      // player.configure('streaming.forceTransmuxTS', true);
+      player.configure({
+        streaming: {
+          forceTransmuxTS: true,
+          jumpLargeGaps: true,
+        }
+      });
 
       player.addEventListener('error', event => {
         // Enhanced error logging
@@ -110,7 +118,7 @@
       logError("Chromecast Player Error: " + JSON.stringify(event.detail));
     });
 
-  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Diagnostic checks added.V20');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Diagnostic checks added.V21');
 </script>
 
 </body>
