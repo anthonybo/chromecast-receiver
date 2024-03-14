@@ -63,6 +63,10 @@
       log('LOAD interceptor called with media: ' + encodedUrl);
 
       const player = new shaka.Player(document.getElementById('audio'));
+
+      // Force transmuxing TS segments
+      player.configure('streaming.forceTransmuxTS', true);
+
       player.addEventListener('error', event => {
         // Enhanced error logging
         logError('Shaka Player Error: ' + JSON.stringify(event.detail));
@@ -98,7 +102,7 @@
       logError("Chromecast Player Error: " + JSON.stringify(event.detail));
     });
 
-  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Diagnostic checks added.V17');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Diagnostic checks added.V18');
 </script>
 
 </body>
