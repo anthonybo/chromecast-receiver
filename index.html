@@ -58,7 +58,8 @@
             cast.framework.messages.MessageType.LOAD,
             async (request) => {
                 // Override the HLS segment format to MPEG2_TS
-                request.media.hlsSegmentFormat = cast.framework.messages.HlsSegmentFormat.TS;
+                request.media.contentType = 'application/x-mpegurl';
+                request.media.hlsSegmentFormat = cast.framework.messages.HlsSegmentFormat.FMP4;
 
                 const url = new URL(request.media.contentId);
                 const encodedUrl = `${url.origin}${url.pathname}?${url.searchParams}`;
@@ -95,7 +96,7 @@
         castReceiverOptions.useShakaForHls = true;
         context.start(castReceiverOptions);
 
-        log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. HLS segment format set to TS.V2');
+        log('Custom Chromecast Receiver started. Shaka enabled for HLS with specified segment formats.V3');
     </script>
 </body>
 </html>
