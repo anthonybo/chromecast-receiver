@@ -74,7 +74,7 @@
 
       // Diagnostic Check: Log the manifest to examine its details
       fetch(encodedUrl).then(response => response.text()).then(manifest => {
-        log("Manifest content: \n" + manifest.substring(0, 500)); // Log first 500 characters of manifest
+        // log("Manifest content: \n" + manifest.substring(0, 500)); // Log first 500 characters of manifest
       }).catch(error => logError("Failed to fetch manifest: " + error));
 
       try {
@@ -98,7 +98,7 @@
       logError("Chromecast Player Error: " + JSON.stringify(event.detail));
     });
 
-  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Diagnostic checks added.V16');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Diagnostic checks added.V17');
 </script>
 
 </body>
