@@ -83,7 +83,7 @@
       if (config && config.streaming && config.streaming.alwaysTransmuxTS) {
         log('Shaka Player is configured to always transmux TS using Mux.js.', JSON.stringify(config));
       } else {
-        logError('Shaka Player might not be configured to use Mux.js for TS transmuxing.');
+        logError('Shaka Player might not be configured to use Mux.js for TS transmuxing.', JSON.stringify(config));
       }
 
       // Advanced Shaka Player configurations
@@ -158,7 +158,7 @@
     cast.framework.events.EventType.ERROR,
     (event) => logError("Chromecast Player Error: " + JSON.stringify(event)));
 
-  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Advanced configurations applied.V27');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Advanced configurations applied.V28');
 </script>
 
 </body>
