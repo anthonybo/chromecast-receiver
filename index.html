@@ -2,25 +2,28 @@
 <html>
 <head>
   <title>Custom Chromecast Receiver</title>
+  <!-- Mux.js for TS segments handling -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mux.js/7.0.3/mux.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js" integrity="sha512-a2B3X7hta/s/ge8bxKVWHhH6ecX2fL6mqQeN3sjioqI4ntS/rP2sLZchNKYK2KXNcreD0xP4Vo7vRsI3WIy3sg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script type="text/javascript" src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+  <!-- Shaka Player for playback -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
+  <!-- Cast Receiver Framework -->
+  <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
   <style>
     #logs {
-      position: fixed; /* Use fixed positioning to ensure visibility across the screen */
-      top: 0; /* Align to the top of the screen */
-      left: 0; /* Align to the left of the screen */
-      right: 0; /* Stretch across the entire width of the screen */
-      bottom: 0; /* Stretch from top to bottom, making full use of the screen height */
-      overflow-y: scroll; /* Allow scrolling through logs if they exceed screen height */
-      z-index: 10000; /* Ensure the log container is on top of other content */
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow-y: scroll;
+      z-index: 10000;
       color: white;
       font-size: 16px;
     }
     .log-entry {
       background-color: rgba(0, 0, 0, 0.7);
       padding: 10px;
-      margin-bottom: 5px; /* Space out log entries for readability */
+      margin-bottom: 5px;
     }
   </style>
 </head>
@@ -32,24 +35,19 @@
 <script>
   function log(message) {
     const logsElement = document.getElementById('logs');
-    // Create a new div for each log message
     const logEntry = document.createElement('div');
-    logEntry.classList.add('log-entry'); // Apply styles to each log entry
+    logEntry.classList.add('log-entry');
     logEntry.textContent = message;
-
     logsElement.appendChild(logEntry);
-    console.log(message); // Also log to console
+    console.log(message);
   }
 
-  // Updated logging function to handle long error messages
   function logError(error) {
     let errorMessage = "Error: ";
-    if (error && error.detail && error.detail.message) {
-      // Attempt to log a concise error message
-      errorMessage += error.detail.message;
+    if (error && error.message) {
+      errorMessage += error.message;
     } else if (error && typeof error === 'object') {
-      // Fallback to logging the entire error object if concise message isn't available
-      errorMessage += JSON.stringify(error, null, 2); // Pretty print the error object
+      errorMessage += JSON.stringify(error, null, 2);
     } else {
       errorMessage += error.toString();
     }
@@ -67,41 +65,34 @@
     cast.framework.messages.MessageType.LOAD,
     async (request) => {
       const url = new URL(request.media.contentId);
-      const encodedSearchParams = new URLSearchParams(url.search);
-      const encodedUrl = `${url.origin}${url.pathname}?${encodedSearchParams}`;
+      const encodedUrl = `${url.origin}${url.pathname}?${url.searchParams}`;
 
       log('LOAD interceptor called with media: ' + encodedUrl);
 
       const player = new shaka.Player(document.getElementById('audio'));
 
-      // Force transmuxing TS segments
-      // player.configure('streaming.forceTransmuxTS', true);
+      // Advanced Shaka Player configurations
       player.configure({
         streaming: {
           forceTransmuxTS: true,
           jumpLargeGaps: true,
+          rebufferingGoal: 20, // Increase buffering goal
+          bufferingGoal: 30, // Increase buffer size
+          bufferBehind: 60, // Increase buffer behind
+        },
+        manifest: {
+          retryParameters: {
+            timeout: 5000, // Adjust retry timeout
+            maxAttempts: 3, // Adjust max retry attempts
+          }
         }
       });
 
-      player.addEventListener('error', event => {
-        // Enhanced error logging
-        logError('Shaka Player Error: ' + JSON.stringify(event.detail));
-
-        // Attempt to get stats after an error for more insights
-        const stats = player.getStats();
-        log('Error Stats: ' + JSON.stringify(stats));
-      });
-
-      // Diagnostic Check: Log the manifest to examine its details
-      fetch(encodedUrl).then(response => response.text()).then(manifest => {
-        // log("Manifest content: \n" + manifest.substring(0, 500)); // Log first 500 characters of manifest
-      }).catch(error => logError("Failed to fetch manifest: " + error));
+      player.addEventListener('error', event => logError('Shaka Player Error: ' + JSON.stringify(event.detail)));
 
       try {
         await player.load(encodedUrl);
         log('The audio has now been loaded!');
-        
-        // Optionally perform checks after successful load
         const stats = player.getStats();
         log('Load Stats: ' + JSON.stringify(stats));
       } catch (error) {
@@ -114,11 +105,9 @@
 
   playerManager.addEventListener(
     cast.framework.events.EventType.ERROR,
-    (event) => {
-      logError("Chromecast Player Error: " + JSON.stringify(event.detail));
-    });
+    (event) => logError("Chromecast Player Error: " + JSON.stringify(event.detail)));
 
-  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Diagnostic checks added.V21');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Advanced configurations applied.V22');
 </script>
 
 </body>
