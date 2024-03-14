@@ -2,8 +2,8 @@
 <html>
 <head>
   <title>Custom Chromecast Receiver</title>
-  <script src="https://cdn.jsdelivr.net/npm/mux.js@5.5.3/dist/mux.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/shaka-player/dist/shaka-player.compiled.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mux.js/7.0.3/mux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js" integrity="sha512-a2B3X7hta/s/ge8bxKVWHhH6ecX2fL6mqQeN3sjioqI4ntS/rP2sLZchNKYK2KXNcreD0xP4Vo7vRsI3WIy3sg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script type="text/javascript" src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
   <style>
     #logs {
@@ -57,12 +57,20 @@
     cast.framework.messages.MessageType.LOAD,
     async (request) => {
       const url = new URL(request.media.contentId);
-      const encodedUrl = `${url.origin}${url.pathname}?${url.searchParams}`;
+      const encodedSearchParams = new URLSearchParams(url.search);
+      const encodedUrl = `${url.origin}${url.pathname}?${encodedSearchParams}`;
 
       log('LOAD interceptor called with media: ' + encodedUrl);
 
       const player = new shaka.Player(document.getElementById('audio'));
-      player.addEventListener('error', event => logError(event.detail));
+      player.addEventListener('error', event => {
+        // Enhanced error logging
+        logError('Shaka Player Error: ' + JSON.stringify(event.detail));
+
+        // Attempt to get stats after an error for more insights
+        const stats = player.getStats();
+        log('Error Stats: ' + JSON.stringify(stats));
+      });
 
       // Diagnostic Check: Log the manifest to examine its details
       fetch(encodedUrl).then(response => response.text()).then(manifest => {
@@ -72,6 +80,10 @@
       try {
         await player.load(encodedUrl);
         log('The audio has now been loaded!');
+        
+        // Optionally perform checks after successful load
+        const stats = player.getStats();
+        log('Load Stats: ' + JSON.stringify(stats));
       } catch (error) {
         logError(error);
         return Promise.reject(new cast.framework.messages.ErrorData(cast.framework.messages.ErrorType.LOAD_FAILED));
@@ -86,7 +98,7 @@
       logError("Chromecast Player Error: " + JSON.stringify(event.detail));
     });
 
-  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Diagnostic checks added.');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Diagnostic checks added.V16');
 </script>
 
 </body>
