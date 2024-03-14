@@ -72,23 +72,37 @@
       const player = new shaka.Player(document.getElementById('audio'));
 
       // Advanced Shaka Player configurations
+      // player.configure({
+      //   streaming: {
+      //     forceTransmuxTS: true,
+      //     jumpLargeGaps: true,
+      //     rebufferingGoal: 20, // Increase buffering goal
+      //     bufferingGoal: 30, // Increase buffer size
+      //     bufferBehind: 60, // Increase buffer behind
+      //   },
+      //   manifest: {
+      //     retryParameters: {
+      //       timeout: 5000, // Adjust retry timeout
+      //       maxAttempts: 3, // Adjust max retry attempts
+      //     }
+      //   }
+      // });
       player.configure({
         streaming: {
           forceTransmuxTS: true,
           jumpLargeGaps: true,
-          rebufferingGoal: 20, // Increase buffering goal
-          bufferingGoal: 30, // Increase buffer size
-          bufferBehind: 60, // Increase buffer behind
-        },
-        manifest: {
-          retryParameters: {
-            timeout: 5000, // Adjust retry timeout
-            maxAttempts: 3, // Adjust max retry attempts
+          rebufferingGoal: 20,
+          bufferingGoal: 30,
+          failureCallback: function(error) {
+            logError('Streaming failure: ' + JSON.stringify(error));
           }
         }
       });
 
-      player.addEventListener('error', event => logError('Shaka Player Error: ' + JSON.stringify(event.detail)));
+      // Improved error logging
+      player.addEventListener('error', event => {
+        logError('Shaka Player Detailed Error: ' + event.detail.code + ' - ' + shaka.util.Error.categorize(event.detail).toString());
+      });
 
       try {
         await player.load(encodedUrl);
@@ -107,7 +121,7 @@
     cast.framework.events.EventType.ERROR,
     (event) => logError("Chromecast Player Error: " + JSON.stringify(event.detail)));
 
-  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Advanced configurations applied.V22');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Advanced configurations applied.V23');
 </script>
 
 </body>
