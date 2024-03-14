@@ -87,16 +87,37 @@
       //     }
       //   }
       // });
+      // player.configure({
+      //   streaming: {
+      //     forceTransmuxTS: true,
+      //     jumpLargeGaps: true,
+      //     rebufferingGoal: 20,
+      //     bufferingGoal: 30,
+      //     failureCallback: function(error) {
+      //       logError('Streaming failure: ' + JSON.stringify(error));
+      //     }
+      //   }
+      // });
       player.configure({
         streaming: {
-          forceTransmuxTS: true,
-          jumpLargeGaps: true,
-          rebufferingGoal: 20,
-          bufferingGoal: 30,
-          failureCallback: function(error) {
-            logError('Streaming failure: ' + JSON.stringify(error));
-          }
-        }
+          lowLatencyMode: true,
+          inaccurateManifestTolerance: 0,
+          rebufferingGoal: 0.01,
+          segmentPrefetchLimit: 2,
+          retryParameters: {
+            baseDelay: 100,
+          },
+        },
+        manifest: {
+          retryParameters: {
+            baseDelay: 100,
+          },
+        },
+        drm: {
+          retryParameters: {
+            baseDelay: 100,
+          },
+        },
       });
 
       // Improved error logging
@@ -121,7 +142,7 @@
     cast.framework.events.EventType.ERROR,
     (event) => logError("Chromecast Player Error: " + JSON.stringify(event.detail)));
 
-  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Advanced configurations applied.V23');
+  log('Custom Chromecast Receiver started. Shaka enabled for HLS with Mux.js for TS to MP4 transmuxing. Advanced configurations applied.V24');
 </script>
 
 </body>
